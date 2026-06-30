@@ -347,13 +347,14 @@ class ClusterBasedNormalizer(FloatFormatter):
             data, model_missing_values = data[:, 0], data[:, 1]
         data = data.reshape((len(data), 1))
         means = self._bgm_transformer.means_.reshape((1, self.max_clusters))
-        std_multiplier = torch.tensor(self.STD_MULTIPLIER, dtype=torch.float32)
         if isinstance(data, torch.Tensor):
+            device = data.device
+            std_multiplier = torch.tensor(self.STD_MULTIPLIER, dtype=torch.float32, device=device)
             probs_detach = probs.clone().detach()
             stds_valid = np.sqrt(self._bgm_transformer.covariances_).reshape((1, self.max_clusters))[:,self.valid_component_indicator]
             means_valid = means[:,self.valid_component_indicator]
-            means = torch.tensor(means_valid, dtype=torch.float32)
-            stds = torch.tensor(stds_valid, dtype=torch.float32)
+            means = torch.tensor(means_valid, dtype=torch.float32, device=device)
+            stds = torch.tensor(stds_valid, dtype=torch.float32, device=device)
             normalized_values = (data - means) / (std_multiplier * stds)
             masked_normalized = torch.sum(normalized_values*probs_detach, dim=1).reshape([-1, 1])
             masked_normalized = torch.clamp(masked_normalized, -.99, .99)
@@ -403,13 +404,14 @@ class ClusterBasedNormalizer(FloatFormatter):
             #diff = np.count_nonzero((normalized-data[:, 0])!=0)/data.shape[0]
             #wandb.log({'Clip_diff/inverse': diff})
 
-            std_multiplier = torch.tensor(self.STD_MULTIPLIER, dtype=torch.float32)
+            device = data.device
+            std_multiplier = torch.tensor(self.STD_MULTIPLIER, dtype=torch.float32, device=device)
             selected_component = data[:, 1:].clone().detach()
 
             means_valid = self._bgm_transformer.means_.reshape([-1])[self.valid_component_indicator]
             stds_valid = np.sqrt(self._bgm_transformer.covariances_.reshape([-1])[self.valid_component_indicator])
-            means = torch.tensor(means_valid, dtype=torch.float32)
-            stds = torch.tensor(stds_valid, dtype=torch.float32)
+            means = torch.tensor(means_valid, dtype=torch.float32, device=device)
+            stds = torch.tensor(stds_valid, dtype=torch.float32, device=device)
             std_t = torch.sum(stds*selected_component, dim=1)
             mean_t = torch.sum(means*selected_component, dim=1)
             reversed_data = normalized * std_multiplier * std_t + mean_t

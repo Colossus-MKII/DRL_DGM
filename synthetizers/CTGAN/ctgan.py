@@ -582,7 +582,13 @@ class CTGAN(BaseSynthesizer):
             # loss_d_syn_all.append(loss_d_syn_running.item()/steps_per_epoch)
             # loss_d_real_all.append(loss_d_real_running.item()/steps_per_epoch)
             # loss_d_all.append(loss_d_running.item()/steps_per_epoch)
-            wandb.log({'epochs/epoch': epoch, 'epochs/loss_gen': loss_g_running/steps_per_epoch, 'epochs/loss_disc_syn': loss_d_syn_running/steps_per_epoch, 'epochs/loss_disc_real': loss_d_real_running/steps_per_epoch, 'epochs/loss_disc': loss_d_running/steps_per_epoch})
+            wandb.log({
+                'epochs/epoch': epoch,
+                'epochs/loss_gen': (loss_g_running / steps_per_epoch).detach().cpu().item(),
+                'epochs/loss_disc_syn': (loss_d_syn_running / steps_per_epoch).detach().cpu().item(),
+                'epochs/loss_disc_real': (loss_d_real_running / steps_per_epoch).detach().cpu().item(),
+                'epochs/loss_disc': (loss_d_running / steps_per_epoch).detach().cpu().item()
+            })
             #wandb.log({'learning_rates/g_lr': self._generator_lr, 'learning_rates/d_lr': self._discriminator_lr})
 
             if self._verbose:
@@ -663,13 +669,13 @@ class CTGAN(BaseSynthesizer):
             fakeact = self._apply_activate(fake)
             data.append(fakeact)
         data = torch.concat(data, axis=0)
-        data = data[:n]
+        data = data[:n].detach().cpu()
         inverse = self._transformer.inverse_transform(data)
         unconstrained_output = inverse.clone()
         if self._version == "constrained" or self._version == "postprocessing":
             # inverse = get_constr_out(inverse)
             inverse = correct_preds(inverse, self.ordering, self.sets_of_constr)
-        return inverse.detach().numpy(), unconstrained_output
+        return inverse.detach().cpu().numpy(), unconstrained_output.detach().cpu()
 
 
     def set_device(self, device):

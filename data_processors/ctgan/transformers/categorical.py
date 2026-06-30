@@ -94,7 +94,8 @@ class OneHotEncoder(BaseTransformer):
                 ##
                 #coder = self._indexer
                 #codes = torch.tensor(pd.Categorical(data, categories=self._uniques).codes)
-            coder = torch.tensor(self._uniques, dtype=torch.float32)
+            device = data.device
+            coder = torch.tensor(self._uniques, dtype=torch.float32, device=device)
             codes = data.clone()
 
             rows = data.shape[0]
@@ -111,7 +112,7 @@ class OneHotEncoder(BaseTransformer):
             array = torch.maximum(diff_neg, torch.zeros_like(diff_neg))
 
             if self._dummy_na:
-                null = torch.zeros((rows, 1), dtype=torch.int)
+                null = torch.zeros((rows, 1), dtype=torch.int, device=device)
                 null[torch.isnan(codes)] = 1
                 array = torch.cat((array, null), dim=1)
 
@@ -178,7 +179,7 @@ class OneHotEncoder(BaseTransformer):
         # xx = beta * x
         # sm = torch.nn.functional.softmax(xx, dim=dim)
         # indices = torch.arange(x.shape[dim])
-        indices = self.torch_dummies.clone()
+        indices = self.torch_dummies.to(device=x.device, dtype=x.dtype)
         y = torch.mul(indices, x)
         result = torch.sum(y, dim)
         return result
@@ -205,6 +206,4 @@ class OneHotEncoder(BaseTransformer):
             return pd.Series(indices).map(self.dummies.__getitem__)
 
             
-
-
 

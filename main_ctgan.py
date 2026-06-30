@@ -1,5 +1,6 @@
 """CLI."""
 import os
+import sys
 import argparse
 import pickle
 import datetime
@@ -9,10 +10,13 @@ import wandb
 
 from timeit import default_timer as timer
 
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+DRL_DIR = os.path.join(ROOT_DIR, "DRL")
+if DRL_DIR not in sys.path:
+    sys.path.insert(0, DRL_DIR)
+
 from synthetizers.CTGAN.ctgan import CTGAN
-from evaluation.eval import eval_synthetic_data, sdv_eval_synthetic_data, constraints_sat_check
 from utils import set_seed, read_csv, all_div_gt_n, _load_json
-from gather_results.reeval_final import prepare_gen_data
 
 # wandb.log({'accuracy': train_acc, 'loss': train_loss})
 # wandb.config.dropout = 0.2
@@ -76,14 +80,107 @@ def _parse_args():
     return parser.parse_args()
 
 
+def _dataset_paths(use_case, tiny=False):
+    data_dir = os.path.join("data", use_case, "tiny") if tiny else os.path.join("data", use_case)
+    return {
+        "train": os.path.join(data_dir, "train_data.csv"),
+        "test": os.path.join(data_dir, "test_data.csv"),
+        "val": os.path.join(data_dir, "val_data.csv"),
+    }
+
+
+def _prepare_heloc_dataset(paths):
+    try:
+        from datasets import load_dataset
+        from sklearn.model_selection import train_test_split
+    except ImportError as exc:
+        raise RuntimeError(
+            "HELOC split files are missing and this environment cannot generate them. "
+            "Install the missing dependency with `pip install datasets scikit-learn`, "
+            "then rerun main_ctgan.py."
+        ) from exc
+
+    print("HELOC split files are missing; preparing them from Hugging Face dataset mstz/heloc.", flush=True)
+    os.makedirs(os.path.dirname(paths["train"]), exist_ok=True)
+
+    try:
+        dataset = load_dataset("mstz/heloc")["train"]
+    except Exception as exc:
+        raise RuntimeError(
+            "Failed to download the HELOC dataset from Hugging Face dataset `mstz/heloc`. "
+            "Check network access, or run `other_helper_scripts/prepare_heloc_dataset.py` "
+            "after installing `datasets`."
+        ) from exc
+
+    df = pd.DataFrame(dataset)
+    df.drop_duplicates(inplace=True)
+
+    train_ratio = 0.8
+    validation_ratio = 0.10
+    test_ratio = 0.10
+    ratio_remaining = 1 - test_ratio
+    ratio_val_adjusted = validation_ratio / ratio_remaining
+
+    x_train, x_test = train_test_split(df, test_size=1 - train_ratio, random_state=1)
+    x_val, x_test = train_test_split(x_test, test_size=ratio_val_adjusted, random_state=1)
+
+    x_train.to_csv(paths["train"], index=False)
+    x_test.to_csv(paths["test"], index=False)
+    x_val.to_csv(paths["val"], index=False)
+    print("HELOC split files written:", paths, flush=True)
+
+
+def _ensure_dataset_files(use_case, paths):
+    missing = [path for path in paths.values() if not os.path.exists(path)]
+    if not missing:
+        return
+
+    if use_case == "heloc":
+        _prepare_heloc_dataset(paths)
+        missing = [path for path in paths.values() if not os.path.exists(path)]
+        if not missing:
+            return
+
+    raise FileNotFoundError(
+        f"Missing dataset split files for use_case={use_case}: {missing}. "
+        "Expected train/test/val CSV files named train_data.csv, test_data.csv, and val_data.csv."
+    )
+
+
+def _load_dataset_splits(args, dataset_info):
+    if args.use_case == "botnet":
+        dataset_paths = _dataset_paths(args.use_case, tiny=True)
+    else:
+        dataset_paths = _dataset_paths(args.use_case)
+
+    _ensure_dataset_files(args.use_case, dataset_paths)
+    print(f"Loading dataset splits from {dataset_paths}", flush=True)
+
+    X_train, (cat_cols, cat_idx), (roundable_idx, round_digits) = read_csv(
+        dataset_paths["train"],
+        args.use_case,
+        dataset_info["manual_inspection_categorical_cols_idx"],
+    )
+    X_test = pd.read_csv(dataset_paths["test"])
+    X_val = pd.read_csv(dataset_paths["val"])
+
+    print(
+        f"Loaded dataset splits: train={X_train.shape}, val={X_val.shape}, test={X_test.shape}",
+        flush=True,
+    )
+
+    return X_train, X_test, X_val, (cat_cols, cat_idx), (roundable_idx, round_digits), dataset_paths
+
+
 def main():
     """CLI."""
+    print(f"Starting main_ctgan.py from {os.path.abspath(__file__)}", flush=True)
     args = _parse_args()
     set_seed(args.seed)
     exp_id = f"{args.version}_{args.label_ordering}_{args.seed}_{args.epochs}_{args.batch_size}_{args.discriminator_lr}_{args.generator_lr}_{DATETIME:%d-%m-%y--%H-%M-%S}"
     path = f"outputs/CTGAN_out/{args.use_case}/{args.version}/{exp_id}"
     args.exp_path = path
-    os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
 
 
     # set args.pac:
@@ -93,25 +190,12 @@ def main():
             args.pac = all_div_gt_n(original_pac, args.batch_size)
             print(f'Changed pac {original_pac} to {args.pac}')
 
-    ######################################################################
-    wandb_run = wandb.init(project=args.wandb_project, id=exp_id, reinit=True,  mode=args.wandb_mode)
-    for k,v in args._get_kwargs():
-        wandb_run.config[k] = v
-    ######################################################################
     args.constraints_file = f'./data/{args.use_case}/{args.use_case}_constraints.txt'
     ######################################################################
     dataset_info = _load_json("datasets_info.json")[args.use_case]
     print(dataset_info)
     ######################################################################
-    if args.use_case == "botnet":
-        X_train, (cat_cols, cat_idx), (roundable_idx, round_digits) = read_csv(f"data/{args.use_case}/tiny/train_data.csv", args.use_case, dataset_info["manual_inspection_categorical_cols_idx"])
-        X_test = pd.read_csv(f"data/{args.use_case}/tiny/test_data.csv")
-        X_val = pd.read_csv(f"data/{args.use_case}/tiny/val_data.csv")
-
-    else:
-        X_train, (cat_cols, cat_idx), (roundable_idx, round_digits) = read_csv(f"data/{args.use_case}/train_data.csv", args.use_case, dataset_info["manual_inspection_categorical_cols_idx"])
-        X_test = pd.read_csv(f"data/{args.use_case}/test_data.csv")
-        X_val = pd.read_csv(f"data/{args.use_case}/val_data.csv")
+    X_train, X_test, X_val, (cat_cols, cat_idx), (roundable_idx, round_digits), dataset_paths = _load_dataset_splits(args, dataset_info)
     columns = X_train.columns.values.tolist()
     args.train_data_cols = columns
     args.dtypes = X_train.dtypes
@@ -120,6 +204,12 @@ def main():
         cat_cols = []
         cat_idx = []
 
+    ######################################################################
+    print("Initialising wandb and CTGAN training.", flush=True)
+    wandb_run = wandb.init(project=args.wandb_project, id=exp_id, reinit=True, mode=args.wandb_mode)
+    for k, v in args._get_kwargs():
+        wandb_run.config[k] = v
+    ######################################################################
 
     if args.load:
         model = CTGAN.load(args.load)
@@ -135,7 +225,9 @@ def main():
                       feats_in_constraints=dataset_info["feats_in_constraints"])
 
     model.set_random_state(args.seed)
+    print(f"Starting CTGAN fit for {args.epochs} epochs.", flush=True)
     model.fit(args, X_train, cat_cols)
+    print("CTGAN fit finished.", flush=True)
 
     # args.save = f'{path}/final_ctgan_model.pt'
     if args.save is not None:
@@ -145,9 +237,11 @@ def main():
         assert args.sample_condition_column_value is not None
 
     if args.use_case == "botnet" or args.use_case == "lcld":
-        X_train = pd.read_csv(f"data/{args.use_case}/tiny/train_data.csv")
-        X_test = pd.read_csv(f"data/{args.use_case}/tiny/test_data.csv")
-        X_val = pd.read_csv(f"data/{args.use_case}/tiny/val_data.csv")
+        dataset_paths = _dataset_paths(args.use_case, tiny=True)
+        _ensure_dataset_files(args.use_case, dataset_paths)
+        X_train = pd.read_csv(dataset_paths["train"])
+        X_test = pd.read_csv(dataset_paths["test"])
+        X_val = pd.read_csv(dataset_paths["val"])
     args.sampling_sizes = [X_train.shape[0], X_val.shape[0], X_test.shape[0]]
         
     model.set_random_state(args.seed)
@@ -206,46 +300,50 @@ def main():
 
         if not args.skip_evaluation: 
 
-            wandb.finish()
-            ######################################################################
-            args.real_data_partition = 'test'
-            args.model_type = 'ctgan'
+            print("Skipping evaluation: this repository snapshot is missing "
+                  "evaluation.eval and gather_results.reeval_final.")
 
-            if 'hyerparam' in args.wandb_project or 'hyper' in args.wandb_project:
-                args.wandb_project = f"DRL_evaluation_{args.model_type}_{args.use_case}_hyperparam_search"
-            else:
-                args.wandb_project = f"DRL_evaluation_{args.model_type}_{args.use_case}"
-
-            wandb_run = wandb.init(project=args.wandb_project, id=exp_id)
-            for k, v in args._get_kwargs():
-                wandb_run.config[k] = v
-            ######################################################################
-            args.round_before_cons = False
-            args.round_after_cons = False
-            args.postprocessing = False
-            if args.version != 'unconstrained':
-                args.version = args.label_ordering
-
-            generated_data, unrounded_generated_data = prepare_gen_data(args, unconstrained_generated_data, roundable_idx, round_digits, columns, X_train)
-
-            # if args.seed < 3:
-            constraints_sat_check(args, real_data, unrounded_generated_data, log_wandb=True)
+            # wandb.finish()
+            # ######################################################################
+            # args.real_data_partition = 'test'
+            # args.model_type = 'ctgan'
+            #
+            # if 'hyerparam' in args.wandb_project or 'hyper' in args.wandb_project:
+            #     args.wandb_project = f"DRL_evaluation_{args.model_type}_{args.use_case}_hyperparam_search"
+            # else:
+            #     args.wandb_project = f"DRL_evaluation_{args.model_type}_{args.use_case}"
+            #
+            # wandb_run = wandb.init(project=args.wandb_project, id=exp_id)
+            # for k, v in args._get_kwargs():
+            #     wandb_run.config[k] = v
+            # ######################################################################
+            # args.round_before_cons = False
+            # args.round_after_cons = False
+            # args.postprocessing = False
+            # if args.version != 'unconstrained':
+            #     args.version = args.label_ordering
+            #
+            # generated_data, unrounded_generated_data = prepare_gen_data(args, unconstrained_generated_data, roundable_idx, round_digits, columns, X_train)
+            #
+            # constraints_sat_check(args, real_data, unrounded_generated_data, log_wandb=True)
             # sdv_eval_synthetic_data(args, args.use_case, real_data, generated_data, columns,
             #                         problem_type=dataset_info["problem_type"],
             #                         target_utility=dataset_info["target_col"], target_detection="", log_wandb=True,
             #                         wandb_run=wandb_run)
-            print('Using evaluators with the following specs', dataset_info["problem_type"], dataset_info["target_size"],
-                dataset_info["target_col"])
-            eval_synthetic_data(args, args.use_case, real_data, generated_data, columns,
-                                problem_type=dataset_info["problem_type"], target_utility=dataset_info["target_col"],
-                                target_utility_size=dataset_info["target_size"], target_detection="", log_wandb=True,
-                                wandb_run=wandb_run, unrounded_generated_data_for_cons_sat=unrounded_generated_data)
+            # print('Using evaluators with the following specs', dataset_info["problem_type"], dataset_info["target_size"],
+            #     dataset_info["target_col"])
+            # eval_synthetic_data(args, args.use_case, real_data, generated_data, columns,
+            #                     problem_type=dataset_info["problem_type"], target_utility=dataset_info["target_col"],
+            #                     target_utility_size=dataset_info["target_size"], target_detection="", log_wandb=True,
+            #                     wandb_run=wandb_run, unrounded_generated_data_for_cons_sat=unrounded_generated_data)
 
 
             # if args.seed < 3:
             #     constraints_sat_check(args, real_data, generated_data, log_wandb=True)
             #     sdv_eval_synthetic_data(args, args.use_case, real_data, generated_data, columns, problem_type=dataset_info["problem_type"], target_utility=dataset_info["target_col"], target_detection="", log_wandb=True, wandb_run=wandb_run)
             #     eval_synthetic_data(args, args.use_case, real_data, generated_data, columns, problem_type=dataset_info["problem_type"], target_utility=dataset_info["target_col"], target_utility_size=dataset_info["target_size"], target_detection="", log_wandb=True, wandb_run=wandb_run)
+
+    wandb.finish()
 
 if __name__ == '__main__':
 

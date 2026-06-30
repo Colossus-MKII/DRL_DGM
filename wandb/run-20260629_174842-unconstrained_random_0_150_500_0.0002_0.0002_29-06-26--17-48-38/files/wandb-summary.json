@@ -1,0 +1,1 @@
+{"_runtime":188,"epochs/epoch":149,"epochs/loss_gen":0.3870345652103424,"epochs/loss_disc":-0.46523162722587585,"_wandb":{"runtime":188},"_timestamp":1.7827807041225705e+09,"_step":149,"epochs/loss_disc_real":0.23582224547863007,"epochs/loss_disc_syn":-0.2294093817472458}
