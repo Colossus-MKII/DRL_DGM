@@ -18,7 +18,7 @@ def eval_atoms_list(atoms_list: List['Atom'], preds: torch.Tensor, reduction='su
         evaluated_atoms.append(atom.eval(atom_value))
 
     if evaluated_atoms == []:
-        return torch.zeros(preds.shape[0])
+        return preds.new_zeros(preds.shape[0])
 
     evaluated_atoms = torch.stack(evaluated_atoms, dim=1)
     if reduction == 'sum':

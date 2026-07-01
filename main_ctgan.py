@@ -16,6 +16,7 @@ if DRL_DIR not in sys.path:
     sys.path.insert(0, DRL_DIR)
 
 from synthetizers.CTGAN.ctgan import CTGAN
+from evaluation.eval_for_testing import constraints_sat_check
 from utils import set_seed, read_csv, all_div_gt_n, _load_json
 
 # wandb.log({'accuracy': train_acc, 'loss': train_loss})
@@ -300,8 +301,25 @@ def main():
 
         if not args.skip_evaluation: 
 
-            print("Skipping evaluation: this repository snapshot is missing "
-                  "evaluation.eval and gather_results.reeval_final.")
+            generated_label = "unconstrained"
+            comparison_data = None
+            if args.version == "constrained":
+                generated_label = "constrained"
+                comparison_data = {"unconstrained": unconstrained_generated_data}
+            elif args.version == "postprocessing":
+                generated_label = "postprocessed"
+                comparison_data = {"unconstrained": unconstrained_generated_data}
+
+            constraints_sat_check(
+                args,
+                real_data,
+                generated_data,
+                log_wandb=True,
+                generated_label=generated_label,
+                comparison_data=comparison_data,
+            )
+            print("Skipping synthetic quality and utility evaluation: this repository "
+                  "snapshot is missing evaluation.eval and gather_results.reeval_final.")
 
             # wandb.finish()
             # ######################################################################

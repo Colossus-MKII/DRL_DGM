@@ -303,8 +303,8 @@ class CTGAN(BaseSynthesizer):
 
         #lr, ada = batch_eval(generated_data, self.train_data, self.test_data)
         #lr, ada = 0, 0
-        features = generated_data.detach().numpy()[:, :-1]
-        cons_rate, batch_rate, ind_score = constraint_satisfaction(features,"url")
+        features = generated_data.detach().cpu().numpy()[:, :-1]
+        cons_rate, batch_rate, ind_score = constraint_satisfaction(features, self.args.use_case)
         self._generator.train()
 
         return cons_rate, batch_rate, ind_score

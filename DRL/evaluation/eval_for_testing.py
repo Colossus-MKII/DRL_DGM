@@ -1,94 +1,168 @@
-import torch
-import wandb
+"""Constraint evaluation for real and generated tabular data."""
+
+from pathlib import Path
+
 import pandas as pd
-import numpy as np
+import wandb
 
 from constraints_code.parser import parse_constraints_file
+from evaluation.constraints import evaluate_constraint_satisfaction
 
-def constraints_sat_check(args, real_data, generated_data, log_wandb):
-    # Note: the ordering of the labels does not matter here
+
+PARTITIONS = ("train", "val", "test")
+
+
+def _as_rounds(data):
+    if isinstance(data, (list, tuple)):
+        return data
+    return [data]
+
+
+def _evaluate_source(source, partitioned_data, constraints):
+    per_round_rows = []
+    per_constraint_rows = []
+
+    for partition in PARTITIONS:
+        if partition not in partitioned_data:
+            continue
+
+        for round_index, data in enumerate(_as_rounds(partitioned_data[partition])):
+            metrics = evaluate_constraint_satisfaction(data, constraints)
+            per_round_rows.append({
+                "source": source,
+                "partition": partition,
+                "round": round_index,
+                "num_rows": metrics["num_rows"],
+                "mean_constraint_satisfaction": metrics["mean_constraint_satisfaction"],
+                "all_constraints_satisfaction": metrics["all_constraints_satisfaction"],
+                "constraints_violated_at_least_once": metrics["constraints_violated_at_least_once"],
+            })
+
+            for constraint_index, score in enumerate(metrics["individual_scores"]):
+                per_constraint_rows.append({
+                    "source": source,
+                    "partition": partition,
+                    "round": round_index,
+                    "constraint": constraint_index,
+                    "satisfaction_rate": float(score),
+                })
+
+    return per_round_rows, per_constraint_rows
+
+
+def _aggregate_rounds(per_round):
+    aggregate = (
+        per_round
+        .groupby(["source", "partition"], as_index=False)
+        .agg(
+            rounds=("round", "count"),
+            rows_per_round=("num_rows", "mean"),
+            mean_constraint_satisfaction=("mean_constraint_satisfaction", "mean"),
+            mean_constraint_satisfaction_std=("mean_constraint_satisfaction", "std"),
+            all_constraints_satisfaction=("all_constraints_satisfaction", "mean"),
+            all_constraints_satisfaction_std=("all_constraints_satisfaction", "std"),
+            constraints_violated_at_least_once=("constraints_violated_at_least_once", "mean"),
+        )
+    )
+    return aggregate.fillna(0.0)
+
+
+def _log_to_wandb(aggregate, per_round, per_constraint):
+    scalar_metrics = {}
+    for row in aggregate.to_dict(orient="records"):
+        prefix = f'constraints/{row["source"]}/{row["partition"]}'
+        scalar_metrics[f"{prefix}/mean_constraint_satisfaction"] = row[
+            "mean_constraint_satisfaction"
+        ]
+        scalar_metrics[f"{prefix}/all_constraints_satisfaction"] = row[
+            "all_constraints_satisfaction"
+        ]
+        scalar_metrics[f"{prefix}/constraints_violated_at_least_once"] = row[
+            "constraints_violated_at_least_once"
+        ]
+
+    scalar_metrics["constraints/summary"] = wandb.Table(dataframe=aggregate)
+    scalar_metrics["constraints/per_round"] = wandb.Table(dataframe=per_round)
+    scalar_metrics["constraints/per_constraint"] = wandb.Table(dataframe=per_constraint)
+    wandb.log(scalar_metrics)
+
+
+def _save_results(args, aggregate, per_round, per_constraint):
+    output_dir = Path(args.exp_path) / "evaluation"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    aggregate.to_csv(output_dir / "constraint_summary.csv", index=False)
+    per_round.to_csv(output_dir / "constraint_per_round.csv", index=False)
+    per_constraint.to_csv(output_dir / "constraint_per_constraint.csv", index=False)
+    return output_dir
+
+
+def constraints_sat_check(
+    args,
+    real_data,
+    generated_data,
+    log_wandb=True,
+    generated_label="generated",
+    comparison_data=None,
+):
+    """Evaluate constraints for every available partition and sampling round."""
     _, constraints = parse_constraints_file(args.constraints_file)
-    gen_sat_check(args, generated_data, constraints, log_wandb)
-    real_sat_check(args, real_data, constraints, log_wandb)
 
-def gen_sat_check(args, generated_data, constraints, log_wandb):
-    sat_rate_per_constr = {i:[] for i in range(len(constraints))}
-    percentage_cons_sat_per_pred = []
-    percentage_of_samples_sat_constraints = []
-    percentage_of_constr_violated_at_least_once = []
+    real_rounds, real_constraints = _evaluate_source("real", real_data, constraints)
+    all_rounds = list(real_rounds)
+    all_constraints = list(real_constraints)
 
-    for _, gen_data in enumerate(generated_data["train"]):
-        samples_sat_constr = torch.ones(gen_data.shape[0]) == 1.
-        num_cons_sat_per_pred = torch.zeros(gen_data.shape[0])
-        num_constr_violated_at_least_once = 0.
-        # gen_data = gen_data.iloc[:, :-1].to_numpy()
-        gen_data = torch.tensor(gen_data.to_numpy())
-        for j, constr in enumerate(constraints):
-            sat_per_datapoint = constr.disjunctive_inequality.check_satisfaction(gen_data)
-            num_cons_sat_per_pred += sat_per_datapoint*1.
-            num_constr_violated_at_least_once += 0. if sat_per_datapoint.all() else 1.
-            sat_rate = sat_per_datapoint.sum()/len(sat_per_datapoint)
-            # print('Synth sat_rate is', sat_rate, sat_per_datapoint.sum(), len(sat_per_datapoint), sat_per_datapoint)
-            sat_rate_per_constr[j].append(sat_rate)
-            samples_sat_constr = samples_sat_constr & sat_per_datapoint
-            # print('samples_violating_constr:', samples_violating_constr.sum())
-        percentage_cons_sat_per_pred.append(np.array(num_cons_sat_per_pred/len(constraints)).mean())
-        percentage_of_samples_sat_constraints.append(sum(samples_sat_constr) / len(samples_sat_constr))
-        percentage_of_constr_violated_at_least_once.append(num_constr_violated_at_least_once/len(constraints))
-    sat_rate_per_constr = {i:[sum(sat_rate_per_constr[i])/len(sat_rate_per_constr[i]) * 100.0] for i in range(len(constraints))}
-    percentage_cons_violations_per_pred = 100.0-sum(percentage_cons_sat_per_pred)/len(percentage_cons_sat_per_pred) * 100.0
-    percentage_of_samples_violating_constraints = 100.0-sum(percentage_of_samples_sat_constraints)/len(percentage_of_samples_sat_constraints) * 100.0
-    percentage_of_constr_violated_at_least_once = sum(percentage_of_constr_violated_at_least_once)/len(percentage_of_constr_violated_at_least_once) * 100.0
-    print('SYNTH', 'sat_rate_per_constr', sat_rate_per_constr)
-    print('SYNTH', 'percentage_of_samples_violating_at_least_one_constraint', percentage_of_samples_violating_constraints)
-    print('SYNTH', 'percentage_cons_violations_per_pred', percentage_cons_violations_per_pred)
-    print('SYNTH', 'percentage_of_constr_violated_at_least_once', percentage_of_constr_violated_at_least_once)
+    generated_sources = {generated_label: generated_data}
+    if comparison_data:
+        generated_sources.update(comparison_data)
 
-    sat_rate_per_constr = pd.DataFrame(sat_rate_per_constr, columns=list(range(len(constraints))))
+    for source, source_data in generated_sources.items():
+        source_rounds, source_constraints = _evaluate_source(
+            source, source_data, constraints
+        )
+        all_rounds.extend(source_rounds)
+        all_constraints.extend(source_constraints)
+
+    per_round = pd.DataFrame(all_rounds)
+    per_constraint = pd.DataFrame(all_constraints)
+    if per_round.empty:
+        raise ValueError("No real or generated data was provided for constraint evaluation.")
+
+    aggregate = _aggregate_rounds(per_round)
+    print("Constraint evaluation summary:")
+    print(aggregate.to_string(index=False))
+    output_dir = _save_results(args, aggregate, per_round, per_constraint)
+    print(f"Constraint evaluation files written to {output_dir}")
+
     if log_wandb:
-        wandb.log({f"INFERENCE/synth_constr_sat": wandb.Table(dataframe=sat_rate_per_constr)})
+        _log_to_wandb(aggregate, per_round, per_constraint)
 
-    synth_constr_eval_metrics = pd.DataFrame({'percentage_of_samples_violating_constraints': [percentage_of_samples_violating_constraints],
-                                              'percentage_cons_violations_per_pred': percentage_cons_violations_per_pred,
-                                              'percentage_of_constr_violated_at_least_once': percentage_of_constr_violated_at_least_once},
-                                             columns=['percentage_of_samples_violating_constraints', 'percentage_cons_violations_per_pred', 'percentage_of_constr_violated_at_least_once'])
+    return {
+        "summary": aggregate,
+        "per_round": per_round,
+        "per_constraint": per_constraint,
+        "output_dir": output_dir,
+    }
+
+
+def gen_sat_check(args, generated_data, constraints, log_wandb=True):
+    """Compatibility wrapper for generated-data-only constraint evaluation."""
+    per_round_rows, per_constraint_rows = _evaluate_source(
+        "generated", generated_data, constraints
+    )
+    per_round = pd.DataFrame(per_round_rows)
+    per_constraint = pd.DataFrame(per_constraint_rows)
+    aggregate = _aggregate_rounds(per_round)
     if log_wandb:
-        wandb.log({f"INFERENCE/synth_constr_eval_metrics": wandb.Table(dataframe=synth_constr_eval_metrics)})
+        _log_to_wandb(aggregate, per_round, per_constraint)
+    return aggregate, per_round, per_constraint
 
-    return sat_rate_per_constr, percentage_of_samples_violating_constraints, synth_constr_eval_metrics
 
-
-def real_sat_check(args, real_data, constraints, log_wandb):
-    sat_rate_per_constr = {i: [] for i in range(len(constraints))}
-    percentage_of_samples_sat_constraints = []
-
-    real_data = real_data["train"]
-    samples_sat_constr = torch.ones(real_data.shape[0]) == 1.
-    # real_data = real_data.iloc[:, :-1].to_numpy()
-    real_data = torch.tensor(real_data.to_numpy())
-
-    for j, constr in enumerate(constraints):
-        sat_per_datapoint = constr.disjunctive_inequality.check_satisfaction(real_data)
-        sat_rate = sat_per_datapoint.sum() / len(sat_per_datapoint)
-        # print('Real sat_rate is', sat_rate, sat_per_datapoint.sum(), len(sat_per_datapoint), sat_per_datapoint)
-        sat_rate_per_constr[j].append(sat_rate)
-        samples_sat_constr = samples_sat_constr & sat_per_datapoint
-
-    percentage_of_samples_sat_constraints.append(sum(samples_sat_constr)/len(samples_sat_constr))
-    sat_rate_per_constr = {i: [sum(sat_rate_per_constr[i]) / len(sat_rate_per_constr[i]) * 100.0] for i in
-                           range(len(constraints))}
-    percentage_of_samples_violating_constraints = 100.0 - sum(percentage_of_samples_sat_constraints) / len(
-        percentage_of_samples_sat_constraints) * 100.0
-    print('REAL', 'sat_rate_per_constr', sat_rate_per_constr)
-    print('REAL', 'percentage_of_samples_violating_constraints', percentage_of_samples_violating_constraints)
-
-    sat_rate_per_constr = pd.DataFrame(sat_rate_per_constr, columns=list(range(len(constraints))))
+def real_sat_check(args, real_data, constraints, log_wandb=True):
+    """Compatibility wrapper for real-data-only constraint evaluation."""
+    per_round_rows, per_constraint_rows = _evaluate_source("real", real_data, constraints)
+    per_round = pd.DataFrame(per_round_rows)
+    per_constraint = pd.DataFrame(per_constraint_rows)
+    aggregate = _aggregate_rounds(per_round)
     if log_wandb:
-        wandb.log({f"INFERENCE/real_constr_sat": wandb.Table(dataframe=sat_rate_per_constr)})
-
-    percentage_of_samples_violating_constraints = pd.DataFrame({'real_percentage_of_samples_violating_constraints': [percentage_of_samples_violating_constraints]}, columns=['real_percentage_of_samples_violating_constraints'])
-    if log_wandb:
-        wandb.log({f"INFERENCE/real_percentage_of_samples_violating_constr": wandb.Table(
-        dataframe=percentage_of_samples_violating_constraints)})
-
-    return sat_rate_per_constr, percentage_of_samples_violating_constraints
+        _log_to_wandb(aggregate, per_round, per_constraint)
+    return aggregate, per_round, per_constraint

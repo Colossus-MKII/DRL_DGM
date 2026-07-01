@@ -11,8 +11,7 @@ from constraints_code.feature_orderings import set_random_ordering
 import numpy as np
 
 INFINITY = torch.inf
-INFINITY_NP = torch.tensor(np.int32(1e16))
-# INFINITY_NP = torch.tensor(np.int64(1e16))
+INFINITY_REPLACEMENT = 1e16
 
 
 def get_constr_at_level_x(x, sets_of_constr):
@@ -33,7 +32,7 @@ def get_lb_from_one_constraint(x: Variable, constraint: Constraint, preds: torch
 
     # if x is y1 and inequality is -y1>0, then add 0+bias to dependency_complements
     if len(complement_body_atoms) == 0:
-        eval_body = torch.zeros(preds.shape[0])  # shape (B,)
+        eval_body = preds.new_zeros(preds.shape[0])  # shape (B,)
     else:
         # evaluate the body of constr, after eliminating x occurrences from it
         eval_body = eval_atoms_list(complement_body_atoms, preds)  # shape (B,)
@@ -64,7 +63,7 @@ def get_ub_from_one_constraint(x: Variable, constraint: Constraint, preds: torch
 
     # if x is y1 and inequality is -y1>0, then add 0+bias to dependency_complements
     if len(complement_body_atoms) == 0:
-        eval_body = torch.zeros(preds.shape[0])  # shape (B,)
+        eval_body = preds.new_zeros(preds.shape[0])  # shape (B,)
     else:
         # evaluate the body of constr, after eliminating x occurrences from it
         eval_body = eval_atoms_list(complement_body_atoms, preds)  # shape (B,)
@@ -356,8 +355,9 @@ def correct_preds(preds: torch.Tensor, ordering: List[Variable], sets_of_constr:
         preds = corrected_preds.clone()
         corrected_preds = preds.clone()
 
-    corrected_preds = torch.where(corrected_preds == torch.inf, INFINITY_NP, corrected_preds)
-    corrected_preds = torch.where(corrected_preds == -torch.inf, -INFINITY_NP, corrected_preds)
+    infinity_replacement = corrected_preds.new_tensor(INFINITY_REPLACEMENT)
+    corrected_preds = torch.where(corrected_preds == torch.inf, infinity_replacement, corrected_preds)
+    corrected_preds = torch.where(corrected_preds == -torch.inf, -infinity_replacement, corrected_preds)
 
     return corrected_preds
 
