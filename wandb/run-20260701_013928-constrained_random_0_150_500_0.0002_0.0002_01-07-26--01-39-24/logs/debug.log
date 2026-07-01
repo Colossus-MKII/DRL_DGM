@@ -1,0 +1,132 @@
+2026-07-01 01:39:28,920 INFO    MainThread:80028 [wandb_setup.py:_flush():81] Current SDK version is 0.28.0
+2026-07-01 01:39:28,920 INFO    MainThread:80028 [wandb_setup.py:_flush():81] Configure stats pid to 80028
+2026-07-01 01:39:28,920 INFO    MainThread:80028 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-07-01 01:39:28,920 INFO    MainThread:80028 [wandb_init.py:setup_run_log_directory():725] Logging user logs to /home/marcwu/DRL_DGM/wandb/run-20260701_013928-constrained_random_0_150_500_0.0002_0.0002_01-07-26--01-39-24/logs/debug.log
+2026-07-01 01:39:28,921 INFO    MainThread:80028 [wandb_init.py:setup_run_log_directory():726] Logging internal logs to /home/marcwu/DRL_DGM/wandb/run-20260701_013928-constrained_random_0_150_500_0.0002_0.0002_01-07-26--01-39-24/logs/debug-internal.log
+2026-07-01 01:39:28,921 INFO    MainThread:80028 [wandb_init.py:init():768] calling init triggers
+2026-07-01 01:39:28,921 INFO    MainThread:80028 [wandb_init.py:init():773] wandb.init called with sweep_config: {}
+config: {'_wandb': {}}
+2026-07-01 01:39:28,921 INFO    MainThread:80028 [wandb_init.py:init():816] starting backend
+2026-07-01 01:39:28,921 INFO    MainThread:80028 [wandb_init.py:init():831] sending inform_init request
+2026-07-01 01:39:29,178 INFO    MainThread:80028 [wandb_init.py:init():836] backend started and connected
+2026-07-01 01:39:29,180 INFO    MainThread:80028 [wandb_init.py:init():906] updated telemetry
+2026-07-01 01:39:29,188 INFO    MainThread:80028 [wandb_init.py:init():929] communicating run to backend with 90.0 second timeout
+2026-07-01 01:39:31,044 INFO    MainThread:80028 [wandb_init.py:init():974] starting run threads in backend
+2026-07-01 01:39:31,234 INFO    MainThread:80028 [wandb_run.py:_console_start():2523] atexit reg
+2026-07-01 01:39:31,234 INFO    MainThread:80028 [wandb_run.py:_redirect():2373] redirect: wrap_raw
+2026-07-01 01:39:31,234 INFO    MainThread:80028 [wandb_run.py:_redirect():2442] Wrapping output streams.
+2026-07-01 01:39:31,234 INFO    MainThread:80028 [wandb_run.py:_redirect():2465] Redirects installed.
+2026-07-01 01:39:31,237 INFO    MainThread:80028 [wandb_init.py:init():1012] run started, returning control to user process
+2026-07-01 01:39:31,238 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set seed = 0 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,238 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb seed 0 None
+2026-07-01 01:39:31,239 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set use_only_target_original_dtype = False - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,239 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb use_only_target_original_dtype False None
+2026-07-01 01:39:31,239 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set pac = 10 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,239 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb pac 10 None
+2026-07-01 01:39:31,240 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set wandb_project = DRL_CTGAN_Constrained - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,240 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb wandb_project DRL_CTGAN_Constrained None
+2026-07-01 01:39:31,240 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set wandb_mode = online - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,241 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb wandb_mode online None
+2026-07-01 01:39:31,241 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set epochs = 150 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,241 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb epochs 150 None
+2026-07-01 01:39:31,241 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set num_samples = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,241 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb num_samples None None
+2026-07-01 01:39:31,242 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set save_every_n_epochs = 5 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,242 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb save_every_n_epochs 5 None
+2026-07-01 01:39:31,242 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set generator_lr = 0.0002 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,242 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb generator_lr 0.0002 None
+2026-07-01 01:39:31,243 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set discriminator_lr = 0.0002 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,243 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb discriminator_lr 0.0002 None
+2026-07-01 01:39:31,243 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set generator_decay = 1e-06 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,243 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb generator_decay 1e-06 None
+2026-07-01 01:39:31,244 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set discriminator_decay = 0.0 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,244 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb discriminator_decay 0.0 None
+2026-07-01 01:39:31,244 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set optimiser = adam - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,244 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb optimiser adam None
+2026-07-01 01:39:31,245 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set embedding_dim = 128 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,245 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb embedding_dim 128 None
+2026-07-01 01:39:31,245 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set generator_dim = 256,256 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,245 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb generator_dim 256,256 None
+2026-07-01 01:39:31,246 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set discriminator_dim = 256,256 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,246 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb discriminator_dim 256,256 None
+2026-07-01 01:39:31,246 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set label_ordering = random - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,246 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb label_ordering random None
+2026-07-01 01:39:31,247 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set batch_size = 500 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,247 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb batch_size 500 None
+2026-07-01 01:39:31,247 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set save = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,247 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb save None None
+2026-07-01 01:39:31,248 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set load = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,248 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb load None None
+2026-07-01 01:39:31,251 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set sample_condition_column = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,252 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb sample_condition_column None None
+2026-07-01 01:39:31,252 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set sample_condition_column_value = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,252 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb sample_condition_column_value None None
+2026-07-01 01:39:31,253 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set use_case = heloc - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,253 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb use_case heloc None
+2026-07-01 01:39:31,253 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set version = constrained - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,253 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb version constrained None
+2026-07-01 01:39:31,254 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set skip_evaluation = False - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,254 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb skip_evaluation False None
+2026-07-01 01:39:31,254 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set runtime_evaluation_only = False - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,254 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb runtime_evaluation_only False None
+2026-07-01 01:39:31,255 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set exp_path = outputs/CTGAN_out/heloc/constrained/constrained_random_0_150_500_0.0002_0.0002_01-07-26--01-39-24 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,255 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb exp_path outputs/CTGAN_out/heloc/constrained/constrained_random_0_150_500_0.0002_0.0002_01-07-26--01-39-24 None
+2026-07-01 01:39:31,255 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set constraints_file = ./data/heloc/heloc_constraints.txt - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,255 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb constraints_file ./data/heloc/heloc_constraints.txt None
+2026-07-01 01:39:31,256 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set train_data_cols = ['estimate_of_risk', 'months_since_first_trade', 'months_since_last_trade', 'average_duration_of_resolution', 'number_of_satisfactory_trades', 'nr_trades_insolvent_for_over_60_days', 'nr_trades_insolvent_for_over_90_days', 'percentage_of_legal_trades', 'months_since_last_illegal_trade', 'maximum_illegal_trades_over_last_year', 'maximum_illegal_trades', 'nr_total_trades', 'nr_trades_initiated_in_last_year', 'percentage_of_installment_trades', 'months_since_last_inquiry_not_recent', 'nr_inquiries_in_last_6_months', 'nr_inquiries_in_last_6_months_not_recent', 'net_fraction_of_revolving_burden', 'net_fraction_of_installment_burden', 'nr_revolving_trades_with_balance', 'nr_installment_trades_with_balance', 'nr_banks_with_high_ratio', 'percentage_trades_with_balance', 'is_at_risk'] - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,256 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb train_data_cols ['estimate_of_risk', 'months_since_first_trade', 'months_since_last_trade', 'average_duration_of_resolution', 'number_of_satisfactory_trades', 'nr_trades_insolvent_for_over_60_days', 'nr_trades_insolvent_for_over_90_days', 'percentage_of_legal_trades', 'months_since_last_illegal_trade', 'maximum_illegal_trades_over_last_year', 'maximum_illegal_trades', 'nr_total_trades', 'nr_trades_initiated_in_last_year', 'percentage_of_installment_trades', 'months_since_last_inquiry_not_recent', 'nr_inquiries_in_last_6_months', 'nr_inquiries_in_last_6_months_not_recent', 'net_fraction_of_revolving_burden', 'net_fraction_of_installment_burden', 'nr_revolving_trades_with_balance', 'nr_installment_trades_with_balance', 'nr_banks_with_high_ratio', 'percentage_trades_with_balance', 'is_at_risk'] None
+2026-07-01 01:39:31,258 INFO    MainThread:80028 [wandb_config.py:__setitem__():155] [no run ID] config set dtypes = estimate_of_risk                            int64
+months_since_first_trade                    int64
+months_since_last_trade                     int64
+average_duration_of_resolution              int64
+number_of_satisfactory_trades               int64
+nr_trades_insolvent_for_over_60_days        int64
+nr_trades_insolvent_for_over_90_days        int64
+percentage_of_legal_trades                  int64
+months_since_last_illegal_trade             int64
+maximum_illegal_trades_over_last_year       int64
+maximum_illegal_trades                      int64
+nr_total_trades                             int64
+nr_trades_initiated_in_last_year            int64
+percentage_of_installment_trades            int64
+months_since_last_inquiry_not_recent        int64
+nr_inquiries_in_last_6_months               int64
+nr_inquiries_in_last_6_months_not_recent    int64
+net_fraction_of_revolving_burden            int64
+net_fraction_of_installment_burden          int64
+nr_revolving_trades_with_balance            int64
+nr_installment_trades_with_balance          int64
+nr_banks_with_high_ratio                    int64
+percentage_trades_with_balance              int64
+is_at_risk                                  int64
+dtype: object - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x76846e541600>>
+2026-07-01 01:39:31,258 INFO    MainThread:80028 [wandb_run.py:_config_callback():1346] config_cb dtypes estimate_of_risk                            int64
+months_since_first_trade                    int64
+months_since_last_trade                     int64
+average_duration_of_resolution              int64
+number_of_satisfactory_trades               int64
+nr_trades_insolvent_for_over_60_days        int64
+nr_trades_insolvent_for_over_90_days        int64
+percentage_of_legal_trades                  int64
+months_since_last_illegal_trade             int64
+maximum_illegal_trades_over_last_year       int64
+maximum_illegal_trades                      int64
+nr_total_trades                             int64
+nr_trades_initiated_in_last_year            int64
+percentage_of_installment_trades            int64
+months_since_last_inquiry_not_recent        int64
+nr_inquiries_in_last_6_months               int64
+nr_inquiries_in_last_6_months_not_recent    int64
+net_fraction_of_revolving_burden            int64
+net_fraction_of_installment_burden          int64
+nr_revolving_trades_with_balance            int64
+nr_installment_trades_with_balance          int64
+nr_banks_with_high_ratio                    int64
+percentage_trades_with_balance              int64
+is_at_risk                                  int64
+dtype: object None
+2026-07-01 01:51:38,449 INFO    MainThread:80028 [wandb_run.py:_finish():2285] finishing run cicerocatobrutus-rutgers-university/DRL_CTGAN_Constrained/constrained_random_0_150_500_0.0002_0.0002_01-07-26--01-39-24
+2026-07-01 01:51:38,450 INFO    MainThread:80028 [wandb_run.py:_atexit_cleanup():2490] got exitcode: 0
+2026-07-01 01:51:38,451 INFO    MainThread:80028 [wandb_run.py:_restore():2472] restore
+2026-07-01 01:51:38,451 INFO    MainThread:80028 [wandb_run.py:_restore():2478] restore done
+2026-07-01 01:51:43,717 INFO    MainThread:80028 [wandb_run.py:_footer_sync_info():3895] logging synced files

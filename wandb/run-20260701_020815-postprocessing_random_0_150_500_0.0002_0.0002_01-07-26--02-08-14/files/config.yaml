@@ -1,0 +1,197 @@
+_wandb:
+    value:
+        cli_version: 0.28.0
+        e:
+            g4lx2lwrl8ypd6dymhocosaw2lddtj5t:
+                args:
+                    - heloc
+                    - --wandb_project=DRL_CTGAN_Postprocessing
+                    - --seed=0
+                    - --epochs=150
+                    - --optimiser=adam
+                    - --generator_lr=0.0002
+                    - --discriminator_lr=0.0002
+                    - --generator_decay=0.000001
+                    - --discriminator_decay=0
+                    - --batch_size=500
+                    - --pac=10
+                    - --version
+                    - postprocessing
+                codePath: main_ctgan.py
+                codePathLocal: main_ctgan.py
+                cpu_count: 128
+                cpu_count_logical: 128
+                cudaVersion: "12.9"
+                disk:
+                    /:
+                        total: "835983917056"
+                        used: "621877137408"
+                email: cicerocatobrutus@gmail.com
+                executable: /home/marcwu/.conda/envs/drl_env/bin/python
+                git:
+                    commit: 39b5914d188e54ad98da3028f395f2d24fb08b8d
+                    remote: https://github.com/Colossus-MKII/DRL_DGM.git
+                gpu: NVIDIA RTX 6000 Ada Generation
+                gpu_count: 4
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 18176
+                      memoryTotal: "51527024640"
+                      name: NVIDIA RTX 6000 Ada Generation
+                      uuid: GPU-bac932f6-4650-a709-d0f2-802fd3f8d8b3
+                    - architecture: Ada
+                      cudaCores: 18176
+                      memoryTotal: "51527024640"
+                      name: NVIDIA RTX 6000 Ada Generation
+                      uuid: GPU-92d8a902-5f9e-5d57-862b-ef53fb384005
+                    - architecture: Ada
+                      cudaCores: 18176
+                      memoryTotal: "51527024640"
+                      name: NVIDIA RTX 6000 Ada Generation
+                      uuid: GPU-9171c26b-5064-bdf9-586f-52bf1f988b9f
+                    - architecture: Ada
+                      cudaCores: 18176
+                      memoryTotal: "51527024640"
+                      name: NVIDIA RTX 6000 Ada Generation
+                      uuid: GPU-c207967b-84d2-bbc8-6b4f-d365bc4cc1bb
+                host: COE-CS-vialab-gpu2
+                memory:
+                    total: "1081957711872"
+                os: Linux-6.8.0-117-generic-x86_64-with-glibc2.39
+                program: /home/marcwu/DRL_DGM/main_ctgan.py
+                python: CPython 3.10.20
+                root: /home/marcwu/DRL_DGM
+                startedAt: "2026-07-01T09:08:15.807926Z"
+                writerId: g4lx2lwrl8ypd6dymhocosaw2lddtj5t
+        m: []
+        python_version: 3.10.20
+        t:
+            "1":
+                - 1
+                - 5
+                - 53
+            "2":
+                - 1
+                - 5
+                - 11
+                - 49
+                - 53
+            "3":
+                - 2
+                - 14
+                - 19
+            "4": 3.10.20
+            "5": 0.28.0
+            "10":
+                - 20
+            "12": 0.28.0
+            "13": linux-x86_64
+batch_size:
+    value: 500
+constraints_file:
+    value: ./data/heloc/heloc_constraints.txt
+discriminator_decay:
+    value: 0
+discriminator_dim:
+    value: 256,256
+discriminator_lr:
+    value: 0.0002
+dtypes:
+    value: |-
+        estimate_of_risk                            int64
+        months_since_first_trade                    int64
+        months_since_last_trade                     int64
+        average_duration_of_resolution              int64
+        number_of_satisfactory_trades               int64
+        nr_trades_insolvent_for_over_60_days        int64
+        nr_trades_insolvent_for_over_90_days        int64
+        percentage_of_legal_trades                  int64
+        months_since_last_illegal_trade             int64
+        maximum_illegal_trades_over_last_year       int64
+        maximum_illegal_trades                      int64
+        nr_total_trades                             int64
+        nr_trades_initiated_in_last_year            int64
+        percentage_of_installment_trades            int64
+        months_since_last_inquiry_not_recent        int64
+        nr_inquiries_in_last_6_months               int64
+        nr_inquiries_in_last_6_months_not_recent    int64
+        net_fraction_of_revolving_burden            int64
+        net_fraction_of_installment_burden          int64
+        nr_revolving_trades_with_balance            int64
+        nr_installment_trades_with_balance          int64
+        nr_banks_with_high_ratio                    int64
+        percentage_trades_with_balance              int64
+        is_at_risk                                  int64
+        dtype: object
+embedding_dim:
+    value: 128
+epochs:
+    value: 150
+exp_path:
+    value: outputs/CTGAN_out/heloc/postprocessing/postprocessing_random_0_150_500_0.0002_0.0002_01-07-26--02-08-14
+generator_decay:
+    value: 1e-06
+generator_dim:
+    value: 256,256
+generator_lr:
+    value: 0.0002
+label_ordering:
+    value: random
+load:
+    value: null
+num_samples:
+    value: null
+optimiser:
+    value: adam
+pac:
+    value: 10
+runtime_evaluation_only:
+    value: false
+sample_condition_column:
+    value: null
+sample_condition_column_value:
+    value: null
+save:
+    value: null
+save_every_n_epochs:
+    value: 5
+seed:
+    value: 0
+skip_evaluation:
+    value: false
+train_data_cols:
+    value:
+        - estimate_of_risk
+        - months_since_first_trade
+        - months_since_last_trade
+        - average_duration_of_resolution
+        - number_of_satisfactory_trades
+        - nr_trades_insolvent_for_over_60_days
+        - nr_trades_insolvent_for_over_90_days
+        - percentage_of_legal_trades
+        - months_since_last_illegal_trade
+        - maximum_illegal_trades_over_last_year
+        - maximum_illegal_trades
+        - nr_total_trades
+        - nr_trades_initiated_in_last_year
+        - percentage_of_installment_trades
+        - months_since_last_inquiry_not_recent
+        - nr_inquiries_in_last_6_months
+        - nr_inquiries_in_last_6_months_not_recent
+        - net_fraction_of_revolving_burden
+        - net_fraction_of_installment_burden
+        - nr_revolving_trades_with_balance
+        - nr_installment_trades_with_balance
+        - nr_banks_with_high_ratio
+        - percentage_trades_with_balance
+        - is_at_risk
+use_case:
+    value: heloc
+use_only_target_original_dtype:
+    value: false
+version:
+    value: postprocessing
+wandb_mode:
+    value: online
+wandb_project:
+    value: DRL_CTGAN_Postprocessing
